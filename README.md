@@ -1,3 +1,5 @@
-### Web-page docs for `maua`
+### Redirect to online docs for `maua`
 
-The `gh-pages` branch for `maua` contains the [vignette](http://pnnl.github.io/maua) of the `maua` package
+[index.html](https://github.com/pnnl/maua/blob/gh-pages/index.html) redirects to [https://pnnl.github.io/docs-maua](https://pnnl.github.io/docs-maua). 
+
+
