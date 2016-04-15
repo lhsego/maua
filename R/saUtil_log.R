@@ -9,7 +9,7 @@
 ##' where \emph{A = log(z - shift) - log(zrange[1] - shift)} and
 ##' \emph{ B = log(zrange[2] - shift) - log(zrange[1] - shift)}.
 ##' 
-##' Note \emph{u(zrange[1]) = urange[1])} and \emph{u(zrange[2]) = urange[2])}.
+##' Note \emph{u(zrange[1]) = urange[1]} and \emph{u(zrange[2]) = urange[2]}.
 ##'
 ##' @export
 ##' @param z A numeric vector of attribute measurements, or values, in their native scale
@@ -18,12 +18,13 @@
 ##' 
 ##' @param zrange A vector with 2 elements containing the minimum and maximum possible values of the attribute.
 ##' However, because the log function goes to \code{-Infty} as \code{z} goes to 0, \code{zrange[1]} fixes a
-##' lower endpoint such that \eqn{u(zrange[1]) = urange[1]}.
+##' lower endpoint such that \emph{u(zrange[1]) = urange[1]}.
 ##' 
 ##' @param urange A vector with 2 elements indicating the range of the utility function. \code{urange[1]}
 ##' is the mapping of \code{zrange[1]}, and \code{urange[2]} is the mapping of \code{zrange[2]}.
 ##' 
-##' @return An object of class \code{saUtilCall}, which includes the utility values of \code{z}
+##' @return An object of class \code{saUtilCall}, which includes the utility values of \code{z}.  This object can be
+##' printed or plotted via \code{\link{print.saUtilCall}} or \code{\link{plot.saUtilCall}}.
 ##' 
 ##' @examples
 ##' # An identify
@@ -77,7 +78,7 @@ saUtil_log <- function(z,
 
   # Set the attributes
   attributes(util) <- c(attributes(util),
-                        list(saUtilFunction = "saUtil_log",
+                        list(saUtilFun = "saUtil_log",
                              parms = list(z = z, shift = shift, zrange = zrange, urange = urange)))
   # Set class
   class(util) <- c("saUtilCall", class(util))

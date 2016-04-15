@@ -7,30 +7,31 @@
 ##' @export
 ##' @rdname saUtil
 ##'
-##' @param saUtilFunction A character string (or unique abbreviation) indicating the single attribute
-##' utility function. Must be one (and only one) of the method functions returned by \code{\link{saUtilFunctions}}.
+##' @param saUtilFun A character string indicating the single attribute
+##' utility function.  This is passed to \code{\link{saUtilFunctions}}.  It can be of the form \code{"saUtil_name"}
+##' or simply \code{"name"}. Acceptable values of \code{saUtilFun} can be found by calling \code{saUtilFunctions()}.
 ##' 
 ##' @param z A numeric vector of attribute values, or NULL.
 ##' 
-##' @param dots Optional named arguments to the \code{\link{saUtilFunctions}} function that will set the parameters
-##' for the single attribute utility function.
+##' @param \dots Optional named arguments to the \code{\link{saUtilFunctions}} function that will set the parameters
+##' for the single attribute utility function.  For the \code{print} and \code{plot} methods, these can be additional
+##' arguments to \code{\link{print.default}} or \code{\link{plot.default}}.
 ##'
 ##' @param x a \code{saUtilCall} or \code{saUtilFun} object returned by \code{saUtil}
 ##' 
-##' @param dots additional arguments passed to \code{\link{print.default}} or \code{\link{plot.default}}
-##'
 ##' @return
 ##' \item{1}{If \code{z = NULL}, the single attribute utility function with fixed parameters is returned
 ##' and can be called later. This function has a single argument, \code{z}, which are the measured
 ##' values of the attribute of interest. The returned object is of class \code{saUtilFun}.}
 ##' \item{2}{If a numeric vector is provided for the argument \code{z},
-##' the utility method is evaluated using \code{z} for the given parameters \code{...} and the
+##' the utility function is evaluated using \code{z} using the parameters supplied to \code{saUtil} via \code{...} and the
 ##' calculated utility values are returned. The returned object is of class \code{saUtilCall}.}
 ##' 
 ##' @examples
 ##' # Create a decreasing, exponential single attribture utility function
-##' uf <- saUtil("saUtil_exp", zrange = c(2, 14), urange = c(1, 0), certEquiv = 5)
+##' uf <- saUtil("exp", zrange = c(2, 14), urange = c(1, 0), certEquiv = 5)
 ##' is.function(uf)
+##' print(uf)
 ##' 
 ##' # Info about 'uf' is contained in the attributes
 ##' attributes(uf)
@@ -50,35 +51,29 @@
 ##' plot(calculatedUtil)
 ##' 
 ##' # An example where the range of attribute values is defined by the existing data
-##' calculatedUtil <- saUtil("saUtil_log", z = runif(10), shift = -0.01)
-##' plot(calculatedUtil, col = "Blue", pch = 2, cex = 2)
+##' calculatedUtil <- saUtil("log", z = runif(10), shift = -0.01)
+##' plot(calculatedUtil, col = "Blue", pch = 2, cex = 1.5)
 
-saUtil <- function(saUtilFunction = "saUtil_exp", z = NULL, ...) {
+saUtil <- function(saUtilFun = "exp", z = NULL, ...) {
 
-  # Check the saUtilFunction argument
-  saUtilFunction <- match.arg(saUtilFunction, saUtilFunctions())
+  # Check the saUtilFun argument
+  saUtilFun <- saUtilFunctions(saUtilFun)
 
   # Check the z argument
-  Smisc::stopifnotMsg(is.vector(z) & is.numeric(z),
+  Smisc::stopifnotMsg(if (!is.null(z)) {
+                        is.vector(z) & is.numeric(z)
+                      } else TRUE,
                       "'z' must be a numeric vector")
   
   inputParms <- list(...)
 
-  ## # If certainty equivalent is provided, if theta was included, set to NA
-  ## if (saUtilFunction == "saUtil_exp") {
-  ##   if ("certEquiv" %in% names(inputParms)) {
-  ##     if (!is.null(inputParms$certEquiv))
-  ##       inputParms$theta <- as.numeric(NA)
-  ##   }
-  ## }
-  
   # Check that arguments provided in parms match the utility method
-  validArgs <- formals(saUtilFunction)
+  validArgs <- formals(saUtilFun)
   
   if (!all(names(inputParms) %in% names(validArgs)))
     stop("'", paste(bad <- setdiff(names(inputParms), names(validArgs)), collapse = "', '"), "' ",
          ifelse(length(bad) == 1, "is not a valid argument", "are not valid arguments"),
-         " to '", saUtilFunction, "'")
+         " to '", saUtilFun, "'")
 
   # Create the list of parms. 
   # Get set of parms that were not provided in the ...
@@ -91,14 +86,16 @@ saUtil <- function(saUtilFunction = "saUtil_exp", z = NULL, ...) {
   parms <- parms[-which(names(parms) == "z")]
 
   # Pepare to calculate the utility function
-  if (is.null(z))
+  if (is.null(z)) {
     z1 <- mean(parms$zrange)
-  else
+  }
+  else {
     z1 <- z
+  }
   
   # Calculate the utility function for the z's that are given--or calculate it to obtain
   # theta and certEquiv, depending on the value of z1
-  utilFun <- do.call(saUtilFunction, c(list(z = z1), parms))
+  utilFun <- do.call(saUtilFun, c(list(z = z1), parms))
   parms <- attributes(utilFun)$parms
   
   # If z is null, return the utility function (instead of the output of the function)
@@ -112,7 +109,7 @@ saUtil <- function(saUtilFunction = "saUtil_exp", z = NULL, ...) {
     # Define the single attribute utility function
     utilFun <- function(z) {
   
-      do.call(saUtilFunction, c(list(z = z), parms))
+      do.call(saUtilFun, c(list(z = z), parms))
   
     } # utilFun
 
@@ -127,7 +124,7 @@ saUtil <- function(saUtilFunction = "saUtil_exp", z = NULL, ...) {
   
   # Add in attributes that make it clear what the parameters are set to
   attributes(utilFun) <- c(attributes(utilFun),
-                           list(saUtilFunction = saUtilFunction),
+                           list(saUtilFun = saUtilFun),
                            list(parms = parms))
 
   return(utilFun)
@@ -140,7 +137,10 @@ saUtil <- function(saUtilFunction = "saUtil_exp", z = NULL, ...) {
 
 ##' @method print saUtilCall
 ##'
-## @describeIn saUtil some text
+##' @describeIn saUtil Prints an \code{saUtilCall} object by displaying only the values returned by the single
+##' attribute utility function, and it hides the attributes of the object.
+##' 
+##' @export
 
 # A method for printing that doesn't show the attributes
 print.saUtilCall <- function(x, ...) {
@@ -151,6 +151,10 @@ print.saUtilCall <- function(x, ...) {
 } # print.saUtilCall
 
 ##' @method print saUtilFun
+##' 
+##' @describeIn saUtil Prints an summary of a \code{saUtilFun} object.
+##' 
+##' @export
 
 print.saUtilFun <- function(x, ...) {
   
@@ -158,10 +162,10 @@ print.saUtilFun <- function(x, ...) {
   attributes(y) <- list(names = names(x))
   print(y, ...)
   
-  saUtilFunction <- attributes(x)$saUtilFunction
+  saUtilFun <- attributes(x)$saUtilFun
   parms <- names(attributes(x)$parms)
   cat("\n")
-  Smisc::pvar(saUtilFunction, parms)
+  Smisc::pvar(saUtilFun, parms)
   
   obj <- deparse(substitute(x))
   cat("\nUse 'str(", ifelse(length(obj) > 1, "", obj), ")' for more details\n", sep = "")
@@ -174,7 +178,7 @@ print.saUtilFun <- function(x, ...) {
 plot_saUtil <- function(saUtilFunObject, ...) {
 
   # Get the function that will be plotted
-  fun <- attributes(saUtilFunObject)$saUtilFunction
+  fun <- attributes(saUtilFunObject)$saUtilFun
   
   # Get the parameters for the function call
   parms <- attributes(saUtilFunObject)$parms
@@ -218,6 +222,7 @@ plot_saUtil <- function(saUtilFunObject, ...) {
   # Default plotting parameters which can be overriden by arguments to ...
   defaultPlotParms <- list(main = c(Smisc::pvar(fun, verbose = FALSE),
                                     Smisc::pvar(lapply(parms, eval), verbose = FALSE, digits = 4)),
+                           font.main = 1,
                            xlab = "Value of Attribute",
                            ylab = "Utility", type = "l")
   
@@ -233,9 +238,14 @@ plot_saUtil <- function(saUtilFunObject, ...) {
 
 } # plot_saUtil
 
-##' @method plot saUtilFun
-
 # Plot methods
+
+##' @method plot saUtilFun
+##' 
+##' @describeIn saUtil For a \code{saUtilFun} object, plots the single attribute utility function.
+##' 
+##' @export
+
 plot.saUtilFun <- function(x, ...) {
 
   plot_saUtil(x, ...)
@@ -243,6 +253,11 @@ plot.saUtilFun <- function(x, ...) {
 } # plot.saUtilFun
 
 ##' @method plot saUtilCall
+##'
+##' @describeIn saUtil For a \code{saUtilCall} object, plots the single attribute utility function,
+##' overlaying the data on the plot
+##' 
+##' @export
 
 plot.saUtilCall <- function(x, ...) {
 

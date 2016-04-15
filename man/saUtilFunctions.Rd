@@ -7,11 +7,12 @@
 saUtilFunctions(saUtilFun = NULL)
 }
 \arguments{
-\item{method}{If supplied, a character string with the name of the single attribute utility function.}
+\item{saUtilFun}{If not \code{NULL}, this should be a character string with the full name of the single attribute utility function,
+or the abbreviated name that describes the function.  See Examples.}
 }
 \value{
 By default, a vector with all available single attribute utility functions, or if a single attribute utility function
-is provided to \code{saUtilFun}, \code{TRUE} or \code{FALSE} is returned depending on whether the function exists.
+is provided to \code{saUtilFun}, the name of the function is returned if it exists.  Otherwise an error is thrown.
 }
 \description{
 By default, this function returns a vector with all of the available single attribute
@@ -19,15 +20,19 @@ utility functions that are available in the \code{maua} package. It can also be 
 verify that a single attribute utility function is available in the package.
 }
 \details{
+All the single attribute
+utility functions are of the form \emph{saUtil_name} where \emph{name} is description of the function. Either
+the full function name or the abbreviated, description, \emph{name}, can be provided to \code{saUtilFun}.
+
 \code{saUtilFunctions()} facilitates the addition of new single attribute utility functions to the package.
 }
 \examples{
 saUtilFunctions()
 
-# The 'expUtil' function exists
-saUtilFunctions("expUtil")
-
-# But the 'noUtil'function does not
-saUtilFunctions("noUtil")
+# The single attribute exponential utility function.
+# Note how both the full name of the function, "saUtil_exp" and
+# its abbreviation both work:
+saUtilFunctions("saUtil_exp")
+saUtilFunctions("exp")
 }
 

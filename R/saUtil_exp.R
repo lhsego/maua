@@ -19,7 +19,8 @@
 ##' be used to solve for the value of \code{theta}--and that solution will overide the value of \code{theta}
 ##' in the function call. See Section 3.5.1.1 of the reference for more discussion on the certainty equivalent.
 ##' 
-##' @return An object of class \code{saUtilCall}, which includes the utility values of \code{z}
+##' @return An object of class \code{saUtilCall}, which includes the utility values of \code{z}. This object can be
+##' printed or plotted via \code{\link{print.saUtilCall}} or \code{\link{plot.saUtilCall}}.
 ##' 
 ##' @references Holmes AE, Sego LH, Webb-Robertson BM, et al.  "An Approach for
 ##' Assessing the Signature Quality of Various Chemical Assays when
@@ -110,15 +111,18 @@ saUtil_exp <- function(z, theta = 0, zrange = range(z), urange = c(0, 1), certEq
         theta.interval <- c(1e-08, theta.star)
     
         # Reverse the interval if the range of theta is negative
-        if (!theta.range.positive)
+        if (!theta.range.positive) {
           theta.interval <- rev(-1 * theta.interval)
+        }
     
         # If the sign of the objective function at the endpoints are not opposite
         # then expand the inverval
-        if (sum(sign(saUtil.obj(theta.interval))) != 0)
+        if (sum(sign(saUtil.obj(theta.interval))) != 0) {
           theta.star <- theta.star + 10
-        else
+        } 
+        else {
           break
+        }
     
         # Increment the counter
         iter <- iter + 1
@@ -168,7 +172,7 @@ saUtil_exp <- function(z, theta = 0, zrange = range(z), urange = c(0, 1), certEq
 
   # Set the attributes
   attributes(util) <- c(attributes(util),
-                        list(saUtilFunction = "saUtil_exp",                        
+                        list(saUtilFun = "saUtil_exp",                        
                              parms = list(z = z, theta = theta, zrange = zrange, urange = urange,
                                           certEquiv = certEquiv)))
   # Set class
