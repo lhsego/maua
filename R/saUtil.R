@@ -40,9 +40,14 @@
 ##' plot(uf)
 ##' 
 ##' # Now calculate the utility for a sequence of points
-##' u <- uf(seq(2, 14, length = 10))
+##' z <- seq(2, 14, length = 10)
+##' u <- uf(z)
 ##' print(u)
 ##' plot(u)
+##'
+##' # We can also evalute the utility scores directly without creating a function.  
+##' u2 <- saUtil("exp", z = z, zrange = c(2, 14), urange = c(1, 0), certEquiv = 5)
+##' identical(u2, u)
 ##' 
 ##' # If we send actual data (attribute values) into saUtil(), the utility function
 ##' # is calculated for us
@@ -70,10 +75,11 @@ saUtil <- function(saUtilFun = "exp", z = NULL, ...) {
   # Check that arguments provided in parms match the utility method
   validArgs <- formals(saUtilFun)
   
-  if (!all(names(inputParms) %in% names(validArgs)))
+  if (!all(names(inputParms) %in% names(validArgs))) {
     stop("'", paste(bad <- setdiff(names(inputParms), names(validArgs)), collapse = "', '"), "' ",
          ifelse(length(bad) == 1, "is not a valid argument", "are not valid arguments"),
          " to '", saUtilFun, "'")
+  }
 
   # Create the list of parms. 
   # Get set of parms that were not provided in the ...
@@ -87,7 +93,14 @@ saUtil <- function(saUtilFun = "exp", z = NULL, ...) {
 
   # Pepare to calculate the utility function
   if (is.null(z)) {
+      
+    # zrange must be supplied if z is not...
+    if (!("zrange" %in%  names(inputParms))) {
+      stop("'zrange' must be supplied when 'z = NULL'")
+    }
+    
     z1 <- mean(parms$zrange)
+    
   }
   else {
     z1 <- z
@@ -198,10 +211,12 @@ plot_saUtil <- function(saUtilFunObject, ...) {
   }
 
   # Get the datapoints z if we need them
-  if (!isFun)
+  if (!isFun) {
     zR <- range(attributes(saUtilFunObject)$parms$z)
-  else
+  }
+  else {
     zR <- c(NA, NA)
+  }
   
   # Create sequences for the plot, where the zSeq is the union of parms$zrange and the data
   zLo <- min(parms$zrange[1], zR[1], na.rm = TRUE)
@@ -210,8 +225,9 @@ plot_saUtil <- function(saUtilFunObject, ...) {
   u <- do.call(fun, c(list(z = zSeq), parms))
 
   # Insert the acheived value of theta if necessary
-  if (fun == "saUtil_exp")
+  if (fun == "saUtil_exp") {
     parms$theta <- attributes(u)$parms$theta
+  }
   
   # Remove elements from parms that are NULL
   parms <- parms[names(parms)[unlist(lapply(parms, function(x) !is.null(x)))]]
@@ -233,9 +249,10 @@ plot_saUtil <- function(saUtilFunObject, ...) {
   do.call("plot", c(list(x = zSeq, y = u), plotParms))
 
   # Add in the points of the the actual data if they are present
-  if (!isFun)
+  if (!isFun) {
     points(attributes(saUtilFunObject)$parms$z, saUtilFunObject, ...)
-
+  }
+  
 } # plot_saUtil
 
 # Plot methods

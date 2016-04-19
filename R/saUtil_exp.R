@@ -28,7 +28,7 @@
 ##' Report, Pacific Northwest National Laboratory, PNNL-22126.  February, 2013.
 ##' 
 ##' @examples
-##' # For exponential utility:
+##' # Some "data"
 ##' x <- 1:10
 ##' # Increasing utility
 ##' saUtil_exp(x, theta = 3)
@@ -42,9 +42,6 @@
 ##' # Obtain the value of theta using the certainty equivalent
 ##' theta0 <- attributes(saUtil_exp(x, certEquiv = 4))$parms$theta
 ##' print(theta0)
-##' 
-##' # These should be the same (this should be 0)
-##' max(abs(saUtil_exp(x, theta = theta0) - saUtil_exp(x, certEquiv = 4)))
 
 saUtil_exp <- function(z, theta = 0, zrange = range(z), urange = c(0, 1), certEquiv = NULL) {
 

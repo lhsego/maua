@@ -34,21 +34,27 @@ saUtilFunctions <- function(saUtilFun = NULL) {
                       } else TRUE,
                       "'saUtilFun' must be NULL or a single character string indicating the single attribute utility function")
 
-  # Add in the saUtil_ prefix if it's not there
-  if (!is.null(saUtilFun)) {
-    if (substr(saUtilFun, 1, 7) != "saUtil_") {
-       saUtilFun <- paste("saUtil", saUtilFun, sep = "_")
-    }
-  }
-
   # The single attribute utility functions currently available in the package
-  saUtilFuns <- c("saUtil_exp", "saUtil_log")
-    
+  saUtilFuns <- c("saUtil_exp", "saUtil_log", "saUtil_linear", "saUtil_identity")
+
   if (is.null(saUtilFun)) {
     return(saUtilFuns)
   }
   else {
-    return(Smisc::selectElements(saUtilFun, saUtilFuns))
+
+    # The possible values that can be supplied to 'saUtilFun'
+    possibleVals <- c(saUtilFuns, sub("saUtil_", "", saUtilFuns))
+
+    # Verify what was provided is in the possible values
+    res <- Smisc::selectElements(saUtilFun, possibleVals)
+
+    # Add the 'saUtil_' prefix if needed
+    if (substr(res, 1, 7) != "saUtil_") {
+       res <- paste("saUtil", res, sep = "_")
+    }
+
+    return(res)
+    
   }
 
 } # saUtilFunctions
