@@ -34,7 +34,7 @@ The exponential utility function may be increasing or decreasing (depending on t
 \code{urange}), and concave, convex, or linear (depending on the choice of \code{theta}).
 }
 \examples{
-# For exponential utility:
+# Some "data"
 x <- 1:10
 # Increasing utility
 saUtil_exp(x, theta = 3)
@@ -48,9 +48,6 @@ attributes(u)
 # Obtain the value of theta using the certainty equivalent
 theta0 <- attributes(saUtil_exp(x, certEquiv = 4))$parms$theta
 print(theta0)
-
-# These should be the same (this should be 0)
-max(abs(saUtil_exp(x, theta = theta0) - saUtil_exp(x, certEquiv = 4)))
 }
 \references{
 Holmes AE, Sego LH, Webb-Robertson BM, et al.  "An Approach for

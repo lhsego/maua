@@ -1,17 +1,23 @@
 ##' Calculate the entropy for each observation
 ##'
 ##' @details
-##' The entropy is \emph{sum_k (P_k * log(P_k)} where \emph{P_k} is the predicted probability that the true class is \emph{k}.
+##' The entropy is \emph{- sum_k (P_k * log(P_k)} where \emph{P_k} is the predicted probability that the true class is \emph{k}.
 ##'
 ##' Note that for \code{scale = FALSE}, smaller is better, whereas for \code{scale = TRUE}, larger is better.
 ##'
+##' Setting \code{scale = TRUE} scales the entropy so that it is negative if the classifies does worse than guessing (i.e.,
+##' worse than assinging uniform probabilities). Predicted probabilities with a 
+##' minimum entropy (maximum information) have a scaled entropy of \code{1} (which occurs when one class
+##' has a predicted probability of 1 and the remainder are 0). 
+##'
 ##' The linear transformation
-##' that takes place when \code{scale = TRUE} maps the entropy, which ranges in \emph{[0,  k / exp(1)]},
-##' (\emph{k} being the number of classes), to \emph{0, 1]}, where \emph{0} indicates uniform probability assignments and \emph{1}
+##' that takes place when \code{scale = TRUE} maps the entropy, which ranges in \emph{[0,  log(K)]},
+##' (\emph{K} being the number of classes), to \emph{0, 1]}, where \emph{0} indicates uniform probability assignments and \emph{1}
 ##' indicates all the probability was assigned to a single class.
+##' Additional information about the scaling is available in Section 3.2.1 of Holmes et al. (2013).
 ##' 
 ##' @export
-##' @param X a data frame containing observations (i.e. instances, examples) on the rows, along with probability predictions for each
+##' @param X a data frame containing observations (i.e., instances, examples) on the rows, along with probability predictions for each
 ##' class.  May contain other columns as well.
 ##'
 ##' @param probs A character vector, logical vector, or vector of numeric indexes that identify the columns in \code{X} that contain
@@ -21,12 +27,16 @@
 ##'
 ##' @param outCol A character string that indicates the name of the column that will contain the entropy.
 ##'
-##' @param scale A logical indicating whether the entropy should be linearly scaled so that larger is better, and uniform classifications
-##' result in a value of \emph{0}, and probabilities with maximum information (minimum entropy) have a value of \code{1}. See Details.
+##' @param scale A logical indicating whether the entropy should be linearly scaled.  See Details.
 ##'
 ##' @return The data frame \code{X} is returned, with an appended column that contains the entropy.
+##' 
+##' @references Holmes AE, Sego LH, Webb-Robertson BJ, et al. (2013). An Approach for Assessing the Signature Quality of
+##' Various Chemical Assays when Predicting the Culture Media Used to Grow Microorganisms.  Pacific Northwest National Laboratory,
+##' PNNL-22126.
 ##'
 ##' @examples
+##' # Construct probability vectors that sum (piecewise) to 1
 ##' p1 <- runif(9)
 ##' p2 <- runif(9, 0, 1 - p1)
 ##' p3 <- 1 - p1 - p2
@@ -46,7 +56,8 @@ fidel_entropy <- function(X, probs, outCol = "entropy", scale = FALSE) {
   # Add the entropy to the output
   intermed <- - Xprobs * log(Xprobs)
 
-  # If any Xprobs are 0, then set value to 0 for the sake of continuity, since 0 * log(0) = NaN
+  # If any Xprobs are 0, then set value to 0 for the sake of continuity, since 0 * log(0) = NaN,
+  # This is mathematically OK because limit of x * log(x) = 0 as x approaches 0 from above.
   if (any(Xprobs == 0)) {
     intermed[Xprobs == 0] <- 0
   }

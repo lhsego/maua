@@ -1,17 +1,22 @@
 ##' Calculate the log score for each observation
 ##' 
 ##' @details The column indicated by \code{truth} must be a factor whose levels indicate all possible classes.  The columns indicated by
-##' \code{prob} must have names which contain the level names in the truth column.
+##' \code{prob} must have names which contain the corresponding level names in the truth column.
 ##'
 ##' The log score is the natural logartihtm of the probability assigned to the true class.  It is calculated for each row separately.
 ##'
-##' Note that for \code{scale = TRUE} or \code{scale = FALSE}, larger is better.
+##' Note that for \code{scale = TRUE} and \code{scale = FALSE}, larger is better.
 ##'
-##' The linear transformation that takes place when \code{scale = TRUE} maps the log score that ranges in \emph{[-Inf, 0]},
-##' to \emph{[-Inf, 1]}, where a unform probability assignment receives a score of 0.
+##' Setting \code{scale = TRUE} scales the log score so that a negative score indicates the
+##' classifier has done worse than guessing (i.e., worse than uniform probability assignmetns).  If the scale log score
+##' is \emph{1}, the classifier has chosen perfectly by assigning probability \emph{1} to the correct class. 
 ##'
+##' The linear transformation that takes place when \code{scale = TRUE} maps the log score, which ranges in \emph{[-Inf, 0]},
+##' to \emph{[-Inf, 1]}.  A unform probability assignment receives a scaled log score of 0.
+##' Additional information about the scaling is available in Section 3.2.1 of Holmes et al. (2013).
+##' 
 ##' @export
-##' @param X a data frame containing observations (i.e. instances, examples) on the rows, along with a truth column and
+##' @param X a data frame containing observations (i.e., instances, examples) on the rows, along with a truth column and
 ##' probability predictions for each class.  May contain other columns as well.
 ##'
 ##' @param truth A character string, logical vector, or numeric index that identifies the column in \code{X} that contains the
@@ -24,13 +29,16 @@
 ##'
 ##' @param outCol A character string that indicates the name of the column that will contain the log scores.
 ##'
-##' @param scale A logical indicating whether the log scores should be linearly scaled so a negative score indicates the
-##' classifier has done worse than guessing, and if the score is \emph{1}, the classifier has chosen perfectly by
-##' assigning probability \emph{1} to the correct class. 
+##' @param scale A logical indicating whether the log scores should be linearly scaled.  See Details.
 ##'
 ##' @return The data frame \code{X} is returned, with an appended column that contains the log scores.
 ##'
+##' @references Holmes AE, Sego LH, Webb-Robertson BJ, et al. (2013). An Approach for Assessing the Signature Quality of
+##' Various Chemical Assays when Predicting the Culture Media Used to Grow Microorganisms.  Pacific Northwest National Laboratory,
+##' PNNL-22126.
+##' 
 ##' @examples
+##' # Construct probability vectors that sum (piecewise) to 1
 ##' p1 <- runif(9)
 ##' p2 <- runif(9, 0, 1 - p1)
 ##' p3 <- 1 - p1 - p2
@@ -76,16 +84,25 @@ fidel_logScore <- function(X, truth, probs, outCol = "logScore", scale = FALSE) 
 # Function to check and prepare args for further use in fidel_logScore and fidel_brierScore
 check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
 
-  # Check on X
-  Smisc::stopifnotMsg(if (is.data.frame(X)) {
-                        !is.null(colnames(X))
-                      } else FALSE,
-                      "'X' must be a dataframe with column names",
-                      is.character(outCol) & (length(outCol) == 1),
-                      "'outCol' must be a character string",
-                      is.logical(scale) & (length(scale) == 1),
-                      "'scale' must be TRUE or FALSE",
-                      level = 3)
+  # Check on X, outCol, and scale
+  Smisc::stopifnotMsg(
+      
+    # X
+    if (is.data.frame(X)) {
+      !is.null(colnames(X))
+    } else FALSE,
+    "'X' must be a dataframe with column names",
+      
+    # outCol
+    is.character(outCol) & (length(outCol) == 1),
+    "'outCol' must be a character string",
+
+    # scale
+    is.logical(scale) & (length(scale) == 1),
+    "'scale' must be TRUE or FALSE",
+      
+    level = 4
+  )
 
   # Verify these columns exist in X
   truth <- Smisc::selectElements(truth, colnames(X))
@@ -93,6 +110,7 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
 
   # Check the truth and the probs
   Smisc::stopifnotMsg(
+      
     # Only 1 truth column
     length(truth) == 1, 
     "Only one column from 'X' should be selected for 'truth'",
@@ -110,7 +128,8 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
     } else FALSE,
     paste("The columns in 'X' selected by 'probs' must be probabilities:\n",
           "numeric values in [0, 1], with each row summing to 1", sep = ""),
-    level = 3
+      
+    level = 4
   )
 
   # Create Xprobs
@@ -126,9 +145,11 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
   names(levelNames) <- levelNames
 
   # Check levels
-  Smisc::stopifnotMsg(length(levelNames) == length(probs),
-                      "The number of levels in 'truth' must be equal to the number of columns selected by 'probs'",
-                      level = 3)
+  Smisc::stopifnotMsg(
+    length(levelNames) == length(probs),
+    "The number of levels in 'truth' must be equal to the number of columns selected by 'probs'",
+    level = 3
+  )
 
   # A 1 to 1 match needs to occur between probs and levelNames.  
   matches <- lapply(levelNames, function(x) grep(x, probs, fixed = TRUE))
@@ -151,9 +172,6 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
 # Same aguments as fidel_logScore, with 'levelNames' and 'matches' produced by 'check_logScore_brierScore_args'
 truthIndicator <- function(X, truth, probs, levelNames, matches) {
 
-  # Create a matrix of 0's
-  ind <- matrix(0, ncol = length(probs), nrow = nrow(X))
-
   # Convert the truth variable to character, make sure all the values are present in 'levelNames'
   truthClasses <- as.character(X[,truth])
 
@@ -164,6 +182,9 @@ truthIndicator <- function(X, truth, probs, levelNames, matches) {
 
   # Now create a vector of column numbers representing the truth cases
   truthCols <- matches[truthClasses]
+
+  # Create a matrix of 0's
+  ind <- matrix(0, ncol = length(probs), nrow = nrow(X))
 
   # Create a matrix over which we'll operate
   indt <- cbind(ind, truthCols)
@@ -183,38 +204,6 @@ truthIndicator <- function(X, truth, probs, levelNames, matches) {
   return(t(apply(indt, 1, assign1)))
   
 } # truthIndicator
-
-
-## # @param X is a numeric matrix
-## # @param colIndex is a numeric vector of column indexes in X, must be same length as nrow(x)
-## # @return The selected truth values
-
-## selectTruth <- function(X, colIndex) {
-
-##   Smisc::stopifnotMsg(is.matrix(X) & is.numeric(X),
-##                       "'X' must be a numeric matrix",
-##                       is.numeric(colIndex),
-##                       "'colIndex' must be numeric")
-
-##   Smisc::stopifnotMsg(all(colIndex %in% 1:ncol(X)),
-##                       "'colIndex' values must be in '1:ncol(X)'",
-##                       length(colIndex) == nrow(X),
-##                       "'length(colIndex)' must be equal to nrow(X)")
-
-##   Xy <- cbind(X, colIndex)
-##   nc <- ncol(Xy)
-
-##   selFun <- function(Xrow) {
-
-##     colIndex <- Xrow[[nc]]
-    
-##     return(Xrow[[colIndex]])
-      
-##   } # selFun
-
-##   return(apply(Xy, 1, selFun))
-    
-## } # selectTruth
 
 
   

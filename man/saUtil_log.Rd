@@ -9,7 +9,8 @@ saUtil_log(z, shift = 0, zrange = range(z), urange = c(0, 1))
 \arguments{
 \item{z}{A numeric vector of attribute measurements, or values, in their native scale}
 
-\item{shift}{A numeric value that shifts the \code{z} values by \code{z - shift} before taking the log.}
+\item{shift}{A numeric value that shifts the \code{z} values by \code{z - shift} before taking the log. One situtation where this
+is useful is when one or more values of \code{z} are negative.}
 
 \item{zrange}{A vector with 2 elements containing the minimum and maximum possible values of the attribute.
 However, because the log function goes to \code{-Infty} as \code{z} goes to 0, \code{zrange[1]} fixes a

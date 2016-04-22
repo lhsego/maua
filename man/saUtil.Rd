@@ -69,9 +69,14 @@ attributes(uf)
 plot(uf)
 
 # Now calculate the utility for a sequence of points
-u <- uf(seq(2, 14, length = 10))
+z <- seq(2, 14, length = 10)
+u <- uf(z)
 print(u)
 plot(u)
+
+# We can also evalute the utility scores directly without creating a function.  
+u2 <- saUtil("exp", z = z, zrange = c(2, 14), urange = c(1, 0), certEquiv = 5)
+identical(u2, u)
 
 # If we send actual data (attribute values) into saUtil(), the utility function
 # is calculated for us

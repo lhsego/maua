@@ -22,9 +22,9 @@ verify that a single attribute utility function is available in the package.
 \details{
 All the single attribute
 utility functions are of the form \emph{saUtil_name} where \emph{name} is description of the function. Either
-the full function name or the abbreviated, description, \emph{name}, can be provided to \code{saUtilFun}.
+the full function name or the abbreviated, description, \emph{name}, can be supplied to the  \code{saUtilFun} argument.
 
-\code{saUtilFunctions()} facilitates the addition of new single attribute utility functions to the package.
+The existence of \code{saUtilFunctions()} facilitates the addition of new single attribute utility functions to the package.
 }
 \examples{
 saUtilFunctions()
