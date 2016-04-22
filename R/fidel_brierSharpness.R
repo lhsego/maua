@@ -52,7 +52,7 @@
 fidel_brierSharpness <- function(X, probs, outCol = "brierSharpness", scale = FALSE) {
 
   # After checking all the args, this leaves 'Xprobs' in the environment of this function
-  Smisc::sepList(check_entropy_brierSharpness_args(X, truth, probs, outCol, scale = FALSE))
+  Smisc::sepList(check_entropy_brierSharpness_args(X, probs, outCol, scale))
 
   # Calculate the Brier sharpness
   brierSharpness <- apply(Xprobs * (Xprobs - 1), 1, sum)

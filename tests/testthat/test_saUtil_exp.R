@@ -4,7 +4,7 @@ test_that("saUtil_exp() returns values as expected", {
 
   x <- 1:10
   theta0 <- attributes(saUtil_exp(x, certEquiv = 4))$parms$theta
-  expect_equal(saUtil_exp(x, theta = theta0), saUtil_exp(x, certEquiv = 4), tol = 1e-14)
+  expect_equal(as.vector(saUtil_exp(x, theta = theta0)), as.vector(saUtil_exp(x, certEquiv = 4)))
 
   u <- saUtil_exp(x, theta = 3, urange = c(1, 0))
   # from Smisc::hardCode(as.vector(u), vert = F, vname = "ux")
@@ -15,5 +15,7 @@ test_that("saUtil_exp() returns values as expected", {
   # Verify endpoints match
   expect_true(max(abs(saUtil_exp(c(4, 7), urange = c(-1, 3), theta = 0) - c(-1, 3))) < 1e-15)
   expect_true(max(abs(saUtil_exp(c(5, 22), urange = c(4, -7), theta = 0) - c(4, -7))) < 1e-15)
+
+  expect_true(inherits(u, "saUtilCall"))
   
 })

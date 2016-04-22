@@ -42,7 +42,7 @@ saUtil_linear <- function(z, zrange = range(z), urange = c(0, 1)) {
                       "'urange' must be a numeric vector of length 2")
   
   # Calculate the utility as requested
-  util <- Smisc::linearMap(Z, D = zrange, R = urange)
+  util <- Smisc::linearMap(z, D = zrange, R = urange)
 
   # Set the attributes
   attributes(util) <- c(attributes(util),

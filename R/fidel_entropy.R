@@ -51,10 +51,10 @@
 fidel_entropy <- function(X, probs, outCol = "entropy", scale = FALSE) {
 
   # After checking all the args, this leaves 'Xprobs' in the environment of this function
-  Smisc::sepList(check_entropy_brierSharpness_args(X, truth, probs, outCol, scale))
+  Smisc::sepList(check_entropy_brierSharpness_args(X, probs, outCol, scale))
 
   # Add the entropy to the output
-  intermed <- - Xprobs * log(Xprobs)
+  intermed <- Xprobs * log(Xprobs)
 
   # If any Xprobs are 0, then set value to 0 for the sake of continuity, since 0 * log(0) = NaN,
   # This is mathematically OK because limit of x * log(x) = 0 as x approaches 0 from above.
@@ -63,7 +63,7 @@ fidel_entropy <- function(X, probs, outCol = "entropy", scale = FALSE) {
   }
 
   # Finish calculation of entropy
-  entropy <- apply(intermed, 1, sum)
+  entropy <- -1 * apply(intermed, 1, sum)
 
   # Scale if requested
   if (scale) {
@@ -89,15 +89,30 @@ check_entropy_brierSharpness_args <- function(X, probs, outCol, scale) {
                       "'X' must be a dataframe with column names",
                       is.character(outCol) & (length(outCol) == 1),
                       "'outCol' must be a character string",
-                       is.logical(scale) & (length(scale) == 1),
+                      is.logical(scale) & (length(scale) == 1),
                       "'scale' must be TRUE or FALSE",
-                      level = 3)
+                      level = 4)
 
   # Verify these columns exist in X
   probs <- Smisc::selectElements(probs, colnames(X))
 
-  # Check the truth and the probs
+  # Check probs
   Smisc::stopifnotMsg(
+      
+    # Length of probs must be at least 2
+    length(probs) >= 2,
+    "At least two columns must be selected by 'probs'",
+
+    # No missing values
+    all(complete.cases(X[,probs])),
+    "All values in 'X' selected by 'probs' must have non-missing values",
+      
+    level = 4
+  )
+
+  # Check probs
+  Smisc::stopifnotMsg(
+      
     # probs are numeric
     if (all(sapply(X[,probs], is.numeric))) {
       # probs in [0, 1]
@@ -105,19 +120,21 @@ check_entropy_brierSharpness_args <- function(X, probs, outCol, scale) {
       # probs sum to 1
       (max(abs(apply(X[,probs], 1, sum) - 1)) < 1e-10)
     } else FALSE,
+      
     paste("The columns in 'X' selected by 'probs' must be probabilities:\n",
           "numeric values in [0, 1], with each row summing to 1", sep = ""),
-    level = 3
+      
+    level = 4
   )
-
-  # Create Xprobs
-  Xprobs <- as.matrix(X[,probs])
 
   # Check outCol
   if (outCol %in% colnames(X)) {
-    warning("The column called '", outCol, "' in 'X' will be overwritten because 'outCol = ", outCol, "'")
+    callingFn <- deparse(sys.calls()[[sys.nframe() - 3]])
+    warning("In ", callingFn, "\n",
+            "The column called '", outCol, "' in 'X' will be overwritten because 'outCol = ", outCol, "'",
+            call. = FALSE)
   }
   
-  return(list(Xprobs = Xprobs))
+  return(list(Xprobs = as.matrix(X[,probs])))
     
 } # check_entropy_brierSharpness_args

@@ -104,7 +104,7 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
     level = 4
   )
 
-  # Verify these columns exist in X
+  # Verify these columns exist in X and select them
   truth <- Smisc::selectElements(truth, colnames(X))
   probs <- Smisc::selectElements(probs, colnames(X))
 
@@ -114,10 +114,28 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
     # Only 1 truth column
     length(truth) == 1, 
     "Only one column from 'X' should be selected for 'truth'",
-                      
+
     # truth col is a factor
     is.factor(X[,truth]),
     "The column in 'X' selected by 'truth' must be a factor",
+
+    # Length of probs must be at least 2
+    length(probs) >= 2,
+    "At least two columns must be selected by 'probs'",
+
+    # truth and probs must be different
+    !any(truth %in% probs),
+    "The column selected by 'truth' must not be among the columns selected by 'probs'",
+
+    # No missing values
+    all(complete.cases(X[,c(truth, probs)])),
+    "All values in 'X' selected by 'truth' and 'probs' must have non-missing values",
+      
+    level = 4
+  )
+
+  # More checks on probs
+  Smisc::stopifnotMsg(
 
     # probs are numeric
     if (all(sapply(X[,probs], is.numeric))) {
@@ -132,12 +150,12 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
     level = 4
   )
 
-  # Create Xprobs
-  Xprobs <- as.matrix(X[,probs])
-
   # Check outCol
   if (outCol %in% colnames(X)) {
-    warning("The column called '", outCol, "' in 'X' will be overwritten because 'outCol = ", outCol, "'")
+    callingFn <- deparse(sys.calls()[[sys.nframe() - 3]])
+    warning("In ", callingFn, "\n",
+            "The column called '", outCol, "' in 'X' will be overwritten because 'outCol = ", outCol, "'",
+            call. = FALSE)
   }
  
   # Get the level names
@@ -148,7 +166,7 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
   Smisc::stopifnotMsg(
     length(levelNames) == length(probs),
     "The number of levels in 'truth' must be equal to the number of columns selected by 'probs'",
-    level = 3
+    level = 4
   )
 
   # A 1 to 1 match needs to occur between probs and levelNames.  
@@ -160,10 +178,10 @@ check_logScore_brierScore_args <- function(X, truth, probs, outCol, scale) {
    "One (or more) of the levels in the truth column match more than one of the columns in 'X' selected by 'probs'",
    !any(lengths(matches) == 0),
    "One (or more) of the levels in the truth column does not have a matching column in 'X' selected by 'probs'",
-   level = 3
+   level = 4
   )
 
-  return(list(truth = truth, probs = probs, Xprobs = Xprobs, levelNames = levelNames,
+  return(list(truth = truth, probs = probs, Xprobs = as.matrix(X[,probs]), levelNames = levelNames,
               matches = unlist(matches)))
     
 } # check_logScore_brierScore_args
@@ -175,10 +193,10 @@ truthIndicator <- function(X, truth, probs, levelNames, matches) {
   # Convert the truth variable to character, make sure all the values are present in 'levelNames'
   truthClasses <- as.character(X[,truth])
 
-  # Sanity check
+  # Sanity check.  I can't imagine this ever happening
   Smisc::stopifnotMsg(all(unique(truthClasses) %in% levelNames),
                       "Not all values of 'as.character(X[,truth])' are in 'levels(X[,truth])'",
-                      level = 2)
+                      level = 3)
 
   # Now create a vector of column numbers representing the truth cases
   truthCols <- matches[truthClasses]

@@ -14,5 +14,8 @@ test_that("saUtil_log() returns values as expected", {
   # Verify endpoints match
   expect_true(max(abs(saUtil_log(c(4, 7), urange = c(-1, 3)) - c(-1, 3))) < 1e-15)
   expect_true(max(abs(saUtil_log(c(-5, 22), urange = c(4, -7), shift = -6) - c(4, -7))) < 1e-15)
+
+  # Check class
+  expect_true(inherits(saUtil_log(exp(0:10), urange = c(0, 10)), "saUtilCall"))
   
 })

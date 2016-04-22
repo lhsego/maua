@@ -19,7 +19,7 @@ saUtil_identity <- function(z) {
                       "'z' must be a numeric vector")
   
   # Calculate the utility as requested
-  util <- x
+  util <- z
 
   # Set the attributes
   attributes(util) <- c(attributes(util),
